@@ -1,7 +1,9 @@
-package com.example.hzg.mysussr;
+package com.example.hzg.mysussr.features.uid;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.ViewModel;
+
+import com.example.hzg.mysussr.features.uid.bean.AppUidBean;
 
 import java.util.List;
 

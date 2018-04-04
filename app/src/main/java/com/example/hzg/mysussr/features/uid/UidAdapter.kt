@@ -1,4 +1,4 @@
-package com.example.hzg.mysussr
+package com.example.hzg.mysussr.features.uid
 
 
 import android.content.Context
@@ -7,7 +7,9 @@ import android.view.View
 import android.widget.CheckBox
 import android.widget.ImageView
 import android.widget.TextView
-import com.example.hzg.mysussr.util.AppLogo
+import com.example.hzg.mysussr.features.uid.bean.AppUidBean
+import com.example.hzg.mysussr.R
+import com.example.hzg.mysussr.base.BaseAdapter
 import com.example.hzg.mysussr.util.ImageLoader
 
 
@@ -15,18 +17,18 @@ import com.example.hzg.mysussr.util.ImageLoader
  * Created by hzg on 2017/8/30.
  *
  */
-class UidAdapter(context: Context, data: MutableList<AppUidBean>, selectList: ArrayList<String>) : com.example.hzg.mysussr.BaseAdapter<AppUidBean>(context, data) {
+class UidAdapter(context: Context, data: MutableList<AppUidBean>, selectList: ArrayList<String>) : BaseAdapter<AppUidBean>(context, data) {
 
 
     init {
 
     }
 
-    override fun createVH(view: View, viewType: Int): com.example.hzg.mysussr.BaseAdapter.BaseVH {
+    override fun createVH(view: View, viewType: Int): BaseAdapter.BaseVH {
         return MyVH(view)
     }
 
-    class MyVH(view: View) : com.example.hzg.mysussr.BaseAdapter.BaseVH(view) {
+    class MyVH(view: View) : BaseAdapter.BaseVH(view) {
         val tvUid: TextView
         val ivIcon: ImageView
         val tvLable: TextView
@@ -40,7 +42,7 @@ class UidAdapter(context: Context, data: MutableList<AppUidBean>, selectList: Ar
         }
     }
 
-    override fun convert(holder: com.example.hzg.mysussr.BaseAdapter.BaseVH, position: Int, bean: AppUidBean) {
+    override fun convert(holder: BaseAdapter.BaseVH, position: Int, bean: AppUidBean) {
         with(holder as MyVH)
         {
             checkbox.setOnCheckedChangeListener(null)
@@ -52,11 +54,11 @@ class UidAdapter(context: Context, data: MutableList<AppUidBean>, selectList: Ar
                     checkedSet.remove(position)
                 }
             }
-            val pm = App.instance.getPackageManager()
 
-            ImageLoader.getInstance().loadAppIcon(context, AppLogo(bean.packageName), R.mipmap.ic_launcher, ivIcon)
+
+            ImageLoader.getInstance().loadAppIcon(context, bean.logo, R.mipmap.ic_launcher, ivIcon)
             //     GlideApp.with(context).load(bean.packageName).centerCrop().into(ivIcon)
-
+            // val pm = App.instance.getPackageManager()
             // ivIcon.setImageDrawable(pm.getApplicationIcon(bean.packageName))
             tvUid.text = bean.uid
             tvLable.text = bean.label

@@ -1,4 +1,4 @@
-package com.example.hzg.mysussr.util;
+package com.example.hzg.mysussr.util.applogo;
 
 /**
  * Created by hzg on 2018/4/4 16:35

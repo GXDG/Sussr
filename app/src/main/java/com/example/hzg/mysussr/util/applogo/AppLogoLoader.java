@@ -1,7 +1,6 @@
-package com.example.hzg.mysussr.util;
+package com.example.hzg.mysussr.util.applogo;
 
 import android.content.Context;
-import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 
 import com.bumptech.glide.load.Options;

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.support.annotation.DrawableRes;
 import android.widget.ImageView;
 
+import com.example.hzg.mysussr.util.applogo.AppLogo;
+
 /**
  * Created by hzg on 2018/4/4 16:28
  * mail:1039766856@qq.com

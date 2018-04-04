@@ -1,8 +1,11 @@
-package com.example.hzg.mysussr;
+package com.example.hzg.mysussr.features.uid;
 
 import android.arch.lifecycle.LiveData;
 import android.arch.lifecycle.MutableLiveData;
 import android.util.Log;
+
+import com.example.hzg.mysussr.features.uid.bean.AppUidBean;
+import com.example.hzg.mysussr.util.Utils;
 
 import java.util.List;
 
@@ -21,8 +24,8 @@ public class UidRepository {
     }
 
     public LiveData<List<AppUidBean>> getUidDataList() {
-        Log.d("getUidDataList","获取Uid数据");
-        MutableLiveData<List<AppUidBean>> data = new MutableLiveData<>();
+        Log.d("getUidDataList", "获取Uid数据");
+        final MutableLiveData<List<AppUidBean>> data = new MutableLiveData<>();
         data.setValue(Utils.INSTANCE.getAppUidList());
         return data;
     }

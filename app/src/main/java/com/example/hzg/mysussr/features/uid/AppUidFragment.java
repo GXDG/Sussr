@@ -1,4 +1,4 @@
-package com.example.hzg.mysussr;
+package com.example.hzg.mysussr.features.uid;
 
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
@@ -10,6 +10,11 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
 
+import com.example.hzg.mysussr.R;
+import com.example.hzg.mysussr.base.BaseFragment;
+import com.example.hzg.mysussr.features.uid.UidAdapter;
+import com.example.hzg.mysussr.features.uid.UidViewModel;
+import com.example.hzg.mysussr.features.uid.bean.AppUidBean;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,7 +27,7 @@ import java.util.List;
 
 public class AppUidFragment extends BaseFragment {
     @Override
-    int getLayoutId() {
+    protected int getLayoutId() {
         return R.layout.fragment_app_uid;
     }
 

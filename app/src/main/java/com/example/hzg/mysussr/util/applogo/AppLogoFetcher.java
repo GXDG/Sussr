@@ -1,4 +1,4 @@
-package com.example.hzg.mysussr.util;
+package com.example.hzg.mysussr.util.applogo;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -9,6 +9,7 @@ import android.util.Log;
 import com.bumptech.glide.Priority;
 import com.bumptech.glide.load.DataSource;
 import com.bumptech.glide.load.data.DataFetcher;
+import com.example.hzg.mysussr.util.FormatTools;
 
 import java.io.InputStream;
 

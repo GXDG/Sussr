@@ -1,7 +1,9 @@
-package com.example.hzg.mysussr
+package com.example.hzg.mysussr.util
 
 import android.content.Context
 import android.content.pm.ApplicationInfo
+import com.example.hzg.mysussr.App
+import com.example.hzg.mysussr.features.uid.bean.AppUidBean
 
 /**
  * Created by hzg on 2018/4/4 10:49

@@ -1,4 +1,4 @@
-package com.example.hzg.mysussr
+package com.example.hzg.mysussr.base
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView

@@ -1,4 +1,4 @@
-package com.example.hzg.mysussr;
+package com.example.hzg.mysussr.base;
 
 import android.content.Context;
 import android.os.Bundle;
@@ -78,7 +78,7 @@ public abstract class BaseFragment extends Fragment {
     }
 
 
-    abstract int getLayoutId();
+    protected abstract int getLayoutId();
 
     protected void initView() {
 

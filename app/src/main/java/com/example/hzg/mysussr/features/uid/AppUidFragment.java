@@ -9,11 +9,8 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 
-
 import com.example.hzg.mysussr.R;
 import com.example.hzg.mysussr.base.BaseFragment;
-import com.example.hzg.mysussr.features.uid.UidAdapter;
-import com.example.hzg.mysussr.features.uid.UidViewModel;
 import com.example.hzg.mysussr.features.uid.bean.AppUidBean;
 
 import java.util.ArrayList;
@@ -47,6 +44,7 @@ public class AppUidFragment extends BaseFragment {
             @Override
             public void onChanged(@Nullable List<AppUidBean> appUidBeans) {
                 Log.d("onChanged", "数据更新");
+                dataList.clear();
                 dataList.addAll(appUidBeans);
                 adapter.notifyDataSetChanged();
             }

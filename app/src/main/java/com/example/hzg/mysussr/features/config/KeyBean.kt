@@ -1,4 +1,4 @@
-package com.example.hzg.mysussr
+package com.example.hzg.mysussr.features.config
 
 /**
  * Created by hzg on 2018/4/3 17:14

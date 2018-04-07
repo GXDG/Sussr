@@ -1,6 +1,7 @@
 package com.example.hzg.mysussr
 
 import android.app.Application
+import com.squareup.leakcanary.LeakCanary
 import kotlin.properties.Delegates
 
 /**
@@ -16,5 +17,6 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         instance = this
+        LeakCanary.install(this)
     }
 }

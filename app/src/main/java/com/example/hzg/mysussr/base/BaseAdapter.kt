@@ -1,6 +1,8 @@
 package com.example.hzg.mysussr.base
 
 import android.content.Context
+import android.databinding.DataBindingUtil
+import android.databinding.ViewDataBinding
 import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
@@ -40,10 +42,17 @@ abstract class BaseAdapter<T>(val context: Context, var mData: MutableList<T>) :
     //获取viewTyp类型获取对应的布局id
     protected abstract fun getLayoutId(viewType: Int): Int
 
-    abstract fun createVH(view: View, viewType: Int): BaseVH
+    fun createVH(view: View, viewType: Int): BaseVH {
+        return BaseVH(view)
+    }
+
     //     布局内容绑定
     protected abstract fun convert(holder: BaseVH, position: Int, bean: T)
 
     open class BaseVH(itemView: View) : RecyclerView.ViewHolder(itemView) {
+
+        fun <T : ViewDataBinding> getDataBinding(): T {
+            return DataBindingUtil.bind<T>(itemView)
+        }
     }
 }

@@ -56,6 +56,8 @@ public class MainViewModel extends ViewModel {
 
                 @Override
                 public void onFailure(@NotNull Throwable e) {
+                    e.printStackTrace();
+
                     isLoading.setValue(false);
                 }
             }));
@@ -68,6 +70,7 @@ public class MainViewModel extends ViewModel {
             mDisposables.add(repository.insertConfig(configBeans, new ResultObserver<Unit>() {
                 @Override
                 public void onSuccess(Unit unit) {
+
                     Log.d("insertConfig","执行成功");
                 }
 

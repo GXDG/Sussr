@@ -2,7 +2,9 @@ package com.example.hzg.mysussr.features
 
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.arch.persistence.db.SupportSQLiteDatabase
 import android.arch.persistence.room.Room
+import android.arch.persistence.room.migration.Migration
 import android.content.Intent
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
@@ -17,6 +19,9 @@ import com.example.hzg.mysussr.widget.LoadingDialog
 
 class MainActivity : BaseActivity() {
     private lateinit var mBinding: ActivityMainBinding
+    private lateinit var mViewModel: MainViewModel
+    private var mConfigBean: ConfigBean? = null
+    private lateinit var dataList: ArrayList<ConfigAdapter.Data>
     var loadingDialog: LoadingDialog? = null
     override fun getLayoutResId(): Int {
         return R.layout.activity_main;
@@ -28,25 +33,33 @@ class MainActivity : BaseActivity() {
 
     override fun initData() {
         val db = Room.databaseBuilder(getApplicationContext(),
-                AppDataBase::class.java!!, "sussr").build()
-        val viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-        val dataList = ArrayList<ConfigAdapter.Data>()
+                AppDataBase::class.java!!, "sussr1")
+                .fallbackToDestructiveMigration()
+                .build()
+
+
+        mViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        dataList = ArrayList<ConfigAdapter.Data>()
+
         val adapter = ConfigAdapter(this, dataList)
+        val selectIndex = 0
         mBinding.rvConfig.layoutManager = LinearLayoutManager(this)
         mBinding.rvConfig.adapter = adapter
         mBinding.rvConfig.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
-        viewModel.setRepository(ConfigRepository(db.configDao()))
-        viewModel.configList.observe(this, Observer {
-            Log.d("xxxx", "xxxx")
-            if (it != null) {
-                it[0].data?.forEach {
-                    dataList.add(ConfigAdapter.Data(it))
-                    adapter.notifyDataSetChanged()
-                }
-
+        mViewModel.setRepository(ConfigRepository(db.configDao()))
+        mViewModel.configList.observe(this, Observer {
+            if (it != null && it.size > 0) {
+                Log.d("", "有数据")
+                mConfigBean = it[selectIndex]
+                initData(mConfigBean!!)
+                adapter.notifyDataSetChanged()
+            } else {
+                Log.d("", "自动插入默认数据")
+                addDefaultConfig()
             }
         })
-        viewModel.isLoading.observe(this, Observer {
+
+        mViewModel.isLoading.observe(this, Observer {
             if (it!!) {
                 showDialog()
             } else {
@@ -55,10 +68,13 @@ class MainActivity : BaseActivity() {
         })
 
         mBinding.btnLoad.setOnClickListener {
-            viewModel.repository.loadConfig(object : ResultObserver<List<ConfigBean>>() {
+            mViewModel.repository.loadConfig(object : ResultObserver<List<ConfigBean>>() {
                 override fun onSuccess(t: List<ConfigBean>) {
                     t.forEach {
                         Log.d("xxx", it.configName)
+                        it.data?.forEach {
+                            Log.d(it.key, it.value)
+                        }
                     }
                 }
 
@@ -70,16 +86,60 @@ class MainActivity : BaseActivity() {
         mBinding.btnInsert.setOnClickListener {
             val data = ConfigBean()
             data.configName = "默认配置"
-            data.uid = 1
+            //data.uid = 1
+            val keyArray = applicationContext.resources.getStringArray(R.array.main_titles)
+            val valueArray = applicationContext.resources.getStringArray(R.array.configValues)
             val list = ArrayList<KeyBean>()
-            list.add(KeyBean("服务器", "127.0.0.1"))
-            list.add(KeyBean("端口", "80"))
-            list.add(KeyBean("密码", ""))
-            list.add(KeyBean("加密方法", "chacha20"))
+            keyArray.indices.mapTo(list) { KeyBean(keyArray[it], valueArray[it]) }
             data.data = list
-            viewModel.insertConfig(data)
+            mViewModel.insertConfig(data)
+
 
         }
+    }
+
+    private fun initData(bean: ConfigBean) {
+        val headerSize = 1
+        if (dataList.size == 0) {
+            dataList.add(ConfigAdapter.Data(KeyBean("配置名称", bean.configName), ConfigAdapter.Data.TYPE_HEADER))
+            bean.data?.forEach {
+                dataList.add(ConfigAdapter.Data(it))
+            }
+        } else {
+            for (i in dataList.indices) {
+                if (i == 0) {
+                    dataList[0].data.value = bean.configName
+                } else {
+                    dataList[i].data = bean.data!![i - headerSize]
+                }
+            }
+        }
+
+        dataList[3 + headerSize].type = ConfigAdapter.Data.TYPE_SELECT
+        dataList[4 + headerSize].type = ConfigAdapter.Data.TYPE_SELECT
+        dataList[5 + headerSize].type = ConfigAdapter.Data.TYPE_SELECT
+        dataList[8 + headerSize].type = ConfigAdapter.Data.TYPE_SELECT
+
+
+        dataList[10 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
+        dataList[11 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
+        dataList[12 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
+        dataList[13 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
+        dataList[14 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
+        dataList[15 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
+        dataList[16 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
+        dataList[17 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
+    }
+
+    fun addDefaultConfig() {
+        val data = ConfigBean()
+        data.configName = "默认配置"
+        val keyArray = applicationContext.resources.getStringArray(R.array.main_titles)
+        val valueArray = applicationContext.resources.getStringArray(R.array.configValues)
+        val list = ArrayList<KeyBean>()
+        keyArray.indices.mapTo(list) { KeyBean(keyArray[it], valueArray[it]) }
+        data.data = list
+        mViewModel.insertConfig(data)
     }
 
     override fun initListener() {
@@ -90,7 +150,7 @@ class MainActivity : BaseActivity() {
 
     fun showDialog() {
         if (loadingDialog == null) {
-            loadingDialog = LoadingDialog.newInstance("应用信息读取中", false)
+            loadingDialog = LoadingDialog.newInstance("应用信息读取中", true)
         }
 
         loadingDialog?.show(supportFragmentManager, "loading")
@@ -100,5 +160,16 @@ class MainActivity : BaseActivity() {
     fun dismissDialog() {
         loadingDialog?.dismiss()
     }
+
+    fun saveConfig() {
+        mConfigBean?.configName = dataList[0].data.value
+        mViewModel.insertConfig(mConfigBean)
+    }
+
+    override fun onPause() {
+        saveConfig()
+        super.onPause()
+    }
+
 
 }

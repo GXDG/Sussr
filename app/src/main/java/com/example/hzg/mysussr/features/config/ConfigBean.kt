@@ -10,12 +10,9 @@ import android.arch.persistence.room.PrimaryKey
  */
 @Entity(tableName = "config")
 class ConfigBean {
-
-    var configName: String? = null
-    @PrimaryKey
-    var uid: Int = 0
-
-
+    @PrimaryKey(autoGenerate = true)
+    var uid = 0
+    var configName: String = ""
     var data: List<KeyBean>? = null
 
 }

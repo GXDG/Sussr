@@ -15,6 +15,10 @@ import android.view.ViewGroup
  */
 abstract class BaseAdapter<T>(val context: Context, var mData: MutableList<T>) : RecyclerView.Adapter<BaseAdapter.BaseVH>() {
 
+    fun getItem(position: Int): T {
+        return mData[position]
+    }
+
     fun setData(mData: MutableList<T>) {
         this.mData = mData
     }

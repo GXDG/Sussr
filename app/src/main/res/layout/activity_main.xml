@@ -9,31 +9,31 @@
 
         <android.support.design.widget.AppBarLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content">
+            android:layout_height="wrap_content"
+            app:layout_behavior="com.example.hzg.mysussr.widget.FixAppBarLayoutBehavior"
+            >
 
             <android.support.design.widget.CollapsingToolbarLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:layout_scrollFlags="scroll|exitUntilCollapsed">
+                app:layout_scrollFlags="scroll|exitUntilCollapsed|snap">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    tools:context="com.example.hzg.mysussr.features.uid.UidActivity">
-
+                    android:layout_height="wrap_content">
 
                     <Button
                         android:id="@+id/btn_save"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Uid"
-                        app:layout_constraintBottom_toBottomOf="parent" />
+                        android:text="Uid放行设置"
+                  />
 
                     <Button
                         android:id="@+id/btn_dialog"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="dialog"
+                        android:text="新增配置"
                         app:layout_constraintBottom_toBottomOf="parent" />
                     <Button
                         android:id="@+id/btn_insert"
@@ -45,7 +45,13 @@
                         android:text="读取数据"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
+                    <Button
+                        android:id="@+id/btn_select"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="选择配置" />
                 </LinearLayout>
+
             </android.support.design.widget.CollapsingToolbarLayout>
         </android.support.design.widget.AppBarLayout>
 

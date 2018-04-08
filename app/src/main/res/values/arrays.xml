@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="value_method">
+        <item>手动输入</item>
+        <item>table</item>
+        <item>rc4</item>
+        <item>rc4-md5</item>
+        <item>rc4-md5-6</item>
+        <item>aes-128-cfb</item>
+        <item>aes-192-cfb</item>
+        <item>aes-256-cfb</item>
+        <item>bf-cfb</item>
+        <item>camellia-128-cfb</item>
+        <item>camellia-192-cfb</item>
+        <item>camellia-256-cfb</item>
+        <item>salsa20</item>
+        <item>chacha20</item>
+        <item>chacha20-ietf</item>
+    </string-array>
+    <string-array name="value_protocol">
+        <item>手动输入</item>
+        <item>origin</item>
+        <item>verify_simple</item>
+        <item>verify_sha1</item>
+        <item>auth_simple</item>
+        <item>auth_sha1</item>
+        <item>auth_sha1_v2</item>
+        <item>auth_sha1_v4</item>
+    </string-array>
+    <string-array name="value_obscure">
+        <item>手动输入</item>
+        <item>plain</item>
+        <item>http_simple</item>
+        <item>tls_simple</item>
+        <item>random_head</item>
+        <item>tls1.2_ticket_auth</item>
+    </string-array>
+    <string-array name="value_dludp">
+        <item>直接发送UDP</item>
+        <item>通过UDP转发</item>
+        <item>通过TCP转发</item>
+    </string-array>
+    <!--配置信息标题-->
+    <string-array name="main_titles">
+        <item>服务器</item>
+        <item>端口</item>
+        <item>密码</item>
+        <item>加密方法</item>
+
+        <item>协议</item>
+        <item>混淆方式</item>
+        <item>混淆参数</item>
+        <item>DNS地址</item>
+        <item>UDP转发模式</item>
+
+        <item>gost密码</item>
+        <item>本机UDP放行</item>
+        <item>热点UDP放行</item>
+        <item>WIFI代理</item>
+        <item>破视频版权</item>
+
+        <item>4G广告过滤</item>
+        <item>热点广告过滤</item>
+        <item>WIFI广告过滤</item>
+        <item>广告规则自动更新</item>
+    </string-array>
+    <!--配置默认值-->
+    <string-array name="configValues">
+        <item>127.0.0.1</item>
+        <item>80</item>
+        <item>""</item>
+        <item>chacha20</item>
+        <item>auth_sha1</item>
+
+        <item>http_simple</item>
+        <item>aop.gd10010.cn</item>
+        <item>114.114.114.114</item>
+        <item>通过UDP转发</item>
+        <item>supppig</item>
+
+        <item>1</item>
+        <item>1</item>
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+
+        <item>0</item>
+        <item>0</item>
+        <item>0</item>
+    </string-array>
+    <string-array name="configName">
+        <item>IP</item>
+        <item>PORT</item>
+        <item>PASSWORD</item>
+        <item>GOSTPWD</item>
+        <item>METHOD</item>
+
+        <item>PROTOCOL</item>
+        <item>OBFS</item>
+        <item>HOST</item>
+        <item>DNS</item>
+        <item>DLUDP</item>
+
+        <item>BJUDP</item>
+        <item>GXUDP</item>
+        <item>QJDL</item>
+        <item>PBQ</item>
+        <item>DATAADB</item>
+
+        <item>HOTADB</item>
+        <item>WIFIADB</item>
+        <item>AUTOUPDATE</item>
+        <item>TFX</item>
+        <item>UFX</item>
+
+        <item>UJW</item>
+    </string-array>
+</resources>

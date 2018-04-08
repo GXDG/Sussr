@@ -1,9 +1,6 @@
 package com.example.hzg.mysussr.features.config
 
-import android.arch.persistence.room.Dao
-import android.arch.persistence.room.Delete
-import android.arch.persistence.room.Insert
-import android.arch.persistence.room.Query
+import android.arch.persistence.room.*
 
 /**
  * Created by hzg on 2018/4/6.
@@ -15,7 +12,7 @@ interface ConfigDao {
     @get:Query("SELECT * FROM config")
     val all: List<ConfigBean>
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(vararg users: ConfigBean)
 
     @Delete

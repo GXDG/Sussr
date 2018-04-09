@@ -17,6 +17,7 @@ class ConfigRepository {
     constructor(configDao: ConfigDao) {
         this.configDao = configDao
     }
+
     fun insertConfig(configBean: Array<ConfigBean>, observer: ResultObserver<Unit>): Disposable {
         return Observable.create<Unit>({
             it.onNext(configDao.insertAll(*configBean))
@@ -26,6 +27,7 @@ class ConfigRepository {
                 .subscribeWith(observer)
 
     }
+
     fun loadConfig(observer: ResultObserver<List<ConfigBean>>): Disposable {
         return Observable.create<List<ConfigBean>>({
             it.onNext(getConfig())
@@ -36,7 +38,33 @@ class ConfigRepository {
 
     }
 
+    fun loadSimpleConfigList(observer: ResultObserver<List<SimpleConfig>>): Disposable {
+        return Observable.create<List<ConfigBean>>({
+            it.onNext(configDao.getConfigNameList())
+        })
+                .map {
+                    val list = ArrayList<SimpleConfig>()
+                    it.mapTo(list) { SimpleConfig(it.uid, it.configName) }
+                    return@map list
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(observer)
+
+    }
+//    fun loadSimpleConfigList(observer: ResultObserver<List<SimpleConfig>>): Disposable {
+//        return Observable.create<List<SimpleConfig>>({
+//            it.onNext(configDao.getConfigNameList())
+//        })
+//                .subscribeOn(Schedulers.io())
+//                .observeOn(AndroidSchedulers.mainThread())
+//                .subscribeWith(observer)
+//
+//    }
+
     fun getConfig(): List<ConfigBean> {
         return configDao.all;
     }
+
+
 }

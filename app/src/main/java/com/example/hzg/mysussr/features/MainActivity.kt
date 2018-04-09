@@ -15,6 +15,7 @@ import com.example.hzg.mysussr.base.BaseActivity
 import com.example.hzg.mysussr.databinding.ActivityMainBinding
 import com.example.hzg.mysussr.features.config.*
 import com.example.hzg.mysussr.features.uid.UidActivity
+import com.example.hzg.mysussr.widget.ConfigListDialog
 import com.example.hzg.mysussr.widget.LoadingDialog
 
 class MainActivity : BaseActivity() {
@@ -33,7 +34,7 @@ class MainActivity : BaseActivity() {
 
     override fun initData() {
         val db = Room.databaseBuilder(getApplicationContext(),
-                AppDataBase::class.java!!, "sussr1")
+                AppDataBase::class.java, "sussr1")
                 .fallbackToDestructiveMigration()
                 .build()
 
@@ -144,7 +145,19 @@ class MainActivity : BaseActivity() {
 
     override fun initListener() {
         mBinding.btnSave.setOnClickListener { v -> startActivity(Intent(this, UidActivity::class.java)) }
-        mBinding.btnDialog.setOnClickListener { v -> showDialog() }
+        mBinding.btnDialog.setOnClickListener { v ->
+            mViewModel.repository.loadSimpleConfigList(object : ResultObserver<List<SimpleConfig>>() {
+                override fun onSuccess(t: List<SimpleConfig>) {
+                    ConfigListDialog.newInstance(t as MutableList<SimpleConfig>, 0)
+                            .show(supportFragmentManager)
+                }
+
+                override fun onFailure(e: Throwable) {
+
+                }
+
+            })
+        }
     }
 
 

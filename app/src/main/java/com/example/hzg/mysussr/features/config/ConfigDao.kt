@@ -10,14 +10,20 @@ import android.arch.persistence.room.*
 @Dao
 interface ConfigDao {
 
-    @get:Query("SELECT * FROM config")
-    val all: List<ConfigBean>
+    @Query("SELECT * FROM config")
+    fun getAllConfig(): List<ConfigBean>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertAll(vararg users: ConfigBean)
 
-    @Query("SELECT uid,configName FROM config")
-    fun getConfigNameList(): List<ConfigBean>
+    @Insert
+    fun insert(config: ConfigBean)
+
+    @Query("select uid,name FROM config")
+    fun getConfigNameList(): List<SimpleConfig>
+
+    @Query("select * from config where uid = :uid")
+    fun getConfigById(uid: Array<Int>): ConfigBean
 
     @Delete
     fun delete(user: ConfigBean)

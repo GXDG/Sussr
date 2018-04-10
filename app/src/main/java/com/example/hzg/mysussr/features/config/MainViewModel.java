@@ -9,7 +9,6 @@ import com.example.hzg.mysussr.ResultObserver;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
-import java.util.logging.Logger;
 
 import io.reactivex.disposables.CompositeDisposable;
 import kotlin.Unit;
@@ -22,6 +21,7 @@ import kotlin.Unit;
 
 public class MainViewModel extends ViewModel {
     private MutableLiveData<List<ConfigBean>> mConfigList;
+    private MutableLiveData<ConfigBean> mSelectConfig;
     private ConfigRepository repository;
     private MutableLiveData<Boolean> isLoading;
     private CompositeDisposable mDisposables;
@@ -41,6 +41,25 @@ public class MainViewModel extends ViewModel {
 
     public MutableLiveData<Boolean> getIsLoading() {
         return isLoading;
+    }
+
+    public MutableLiveData<ConfigBean> getSelectConfig(int uid) {
+        if (mSelectConfig == null) {
+            mSelectConfig = new MutableLiveData<>();
+            mDisposables.add(repository.loadSelectConfig(uid, new ResultObserver<ConfigBean>() {
+                @Override
+                public void onSuccess(ConfigBean configBean) {
+                    mSelectConfig.setValue(configBean);
+                }
+
+                @Override
+                public void onFailure(@NotNull Throwable e) {
+                    e.printStackTrace();
+                    getConfigList();
+                }
+            }));
+        }
+        return mSelectConfig;
     }
 
     public MutableLiveData<List<ConfigBean>> getConfigList() {
@@ -66,22 +85,36 @@ public class MainViewModel extends ViewModel {
         return mConfigList;
     }
 
-    public void insertConfig(ConfigBean... configBeans) {
-            mDisposables.add(repository.insertConfig(configBeans, new ResultObserver<Unit>() {
-                @Override
-                public void onSuccess(Unit unit) {
-
-                    Log.d("insertConfig","执行成功");
+    public void insertConfig(ConfigBean configBean) {
+        mDisposables.add(repository.insertConfig(configBean, new ResultObserver<ConfigBean>() {
+            @Override
+            public void onSuccess(ConfigBean data) {
+                if (mSelectConfig == null) {
+                    mSelectConfig = new MutableLiveData<>();
                 }
+                mSelectConfig.setValue(data);
+                Log.d("insertConfig", "执行成功");
+            }
 
-                @Override
-                public void onFailure(@NotNull Throwable e) {
-                    e.printStackTrace();
-                    Log.d("insertConfig","执行失败");
-                }
-            }));
-             //  repository.configDao.insertAll(configBeans);
-
-
+            @Override
+            public void onFailure(@NotNull Throwable e) {
+                e.printStackTrace();
+                Log.d("insertConfig", "执行失败");
+            }
+        }));
     }
+    public void saveConfig(ConfigBean configBean) {
+        mDisposables.add(repository.updateConfig(configBean, new ResultObserver<Unit>() {
+            @Override
+            public void onSuccess(Unit unit) {
+
+            }
+
+            @Override
+            public void onFailure(@NotNull Throwable e) {
+                e.printStackTrace();
+            }
+        }));
+    }
+
 }

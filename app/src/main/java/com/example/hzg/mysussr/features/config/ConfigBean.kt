@@ -1,5 +1,6 @@
 package com.example.hzg.mysussr.features.config
 
+import android.arch.persistence.room.ColumnInfo
 import android.arch.persistence.room.Entity
 import android.arch.persistence.room.PrimaryKey
 
@@ -10,8 +11,10 @@ import android.arch.persistence.room.PrimaryKey
  */
 @Entity(tableName = "config")
 class ConfigBean {
-    @PrimaryKey(autoGenerate = true)
-    var uid = 0
+    @PrimaryKey( autoGenerate = true)
+    @ColumnInfo(name="uid")
+    var uid :Int= 0
+    @ColumnInfo(name="name")
     var configName: String = ""
     var data: List<KeyBean>? = null
 

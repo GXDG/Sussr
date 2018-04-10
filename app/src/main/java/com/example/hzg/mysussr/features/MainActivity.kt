@@ -2,9 +2,7 @@ package com.example.hzg.mysussr.features
 
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.arch.persistence.db.SupportSQLiteDatabase
 import android.arch.persistence.room.Room
-import android.arch.persistence.room.migration.Migration
 import android.content.Intent
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.LinearLayoutManager
@@ -24,6 +22,7 @@ class MainActivity : BaseActivity() {
     private var mConfigBean: ConfigBean? = null
     private lateinit var dataList: ArrayList<ConfigAdapter.Data>
     var loadingDialog: LoadingDialog? = null
+    var selectId = 0
     override fun getLayoutResId(): Int {
         return R.layout.activity_main;
     }
@@ -43,7 +42,7 @@ class MainActivity : BaseActivity() {
         dataList = ArrayList<ConfigAdapter.Data>()
 
         val adapter = ConfigAdapter(this, dataList)
-        val selectIndex = 0
+
         mBinding.rvConfig.layoutManager = LinearLayoutManager(this)
         mBinding.rvConfig.adapter = adapter
         mBinding.rvConfig.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
@@ -51,15 +50,19 @@ class MainActivity : BaseActivity() {
         mViewModel.configList.observe(this, Observer {
             if (it != null && it.size > 0) {
                 Log.d("", "有数据")
-                mConfigBean = it[selectIndex]
-                initData(mConfigBean!!)
-                adapter.notifyDataSetChanged()
+
             } else {
                 Log.d("", "自动插入默认数据")
-                addDefaultConfig()
+                addDefaultConfig("默认配置")
             }
         })
 
+        mViewModel.getSelectConfig(selectId).observe(this, Observer {
+            mConfigBean = it
+            selectId = mConfigBean!!.uid
+            initData(mConfigBean!!)
+            adapter.notifyDataSetChanged()
+        })
         mViewModel.isLoading.observe(this, Observer {
             if (it!!) {
                 showDialog()
@@ -132,9 +135,9 @@ class MainActivity : BaseActivity() {
         dataList[17 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
     }
 
-    fun addDefaultConfig() {
+    fun addDefaultConfig(configName: String) {
         val data = ConfigBean()
-        data.configName = "默认配置"
+        data.configName = configName
         val keyArray = applicationContext.resources.getStringArray(R.array.main_titles)
         val valueArray = applicationContext.resources.getStringArray(R.array.configValues)
         val list = ArrayList<KeyBean>()
@@ -148,8 +151,19 @@ class MainActivity : BaseActivity() {
         mBinding.btnDialog.setOnClickListener { v ->
             mViewModel.repository.loadSimpleConfigList(object : ResultObserver<List<SimpleConfig>>() {
                 override fun onSuccess(t: List<SimpleConfig>) {
-                    ConfigListDialog.newInstance(t as MutableList<SimpleConfig>, 0)
-                            .show(supportFragmentManager)
+                    ConfigListDialog.newInstance(t as MutableList<SimpleConfig>, selectId, object : ConfigListDialog.AddConfigListener {
+                        override fun addConfigSussr(sussr: MutableList<String>) {
+
+                        }
+
+                        override fun addConfigSsr(ssr: Array<String>) {
+
+                        }
+
+                        override fun addConfigName(name: String) {
+                            addDefaultConfig(name)
+                        }
+                    }).show(supportFragmentManager)
                 }
 
                 override fun onFailure(e: Throwable) {
@@ -176,13 +190,16 @@ class MainActivity : BaseActivity() {
 
     fun saveConfig() {
         mConfigBean?.configName = dataList[0].data.value
-        mViewModel.insertConfig(mConfigBean)
+        mViewModel.saveConfig(mConfigBean)
     }
 
     override fun onPause() {
-        saveConfig()
         super.onPause()
     }
 
+    override fun onStop() {
+        saveConfig()
+        super.onStop()
+    }
 
 }

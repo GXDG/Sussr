@@ -1,4 +1,4 @@
-package com.hzg.mysussr.utils
+package com.example.hzg.mysussr.util
 
 import android.util.Log
 import java.io.BufferedReader

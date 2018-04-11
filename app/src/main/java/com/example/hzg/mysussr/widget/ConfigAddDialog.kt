@@ -12,14 +12,17 @@ import com.example.hzg.mysussr.util.SSRConfigUtil
  */
 class ConfigAddDialog() : BaseDialog() {
     companion object {
-        fun newInstance(listener: OnClickListener): ConfigAddDialog {
+        fun newInstance(nameList: MutableList<String>, listener: OnClickListener): ConfigAddDialog {
             val dialog = ConfigAddDialog();
             dialog.listener = listener
+            dialog.nameList.clear()
+            dialog.nameList.addAll(nameList)
             return dialog
         }
     }
 
     var listener: OnClickListener? = null
+    var nameList: MutableList<String> = ArrayList<String>()
     override fun getLayoutId(): Int {
         return R.layout.dialog_config_add
     }
@@ -28,12 +31,14 @@ class ConfigAddDialog() : BaseDialog() {
         setFullScreen(true)
     }
 
-    init {
+    override fun init() {
         with(getDataBinding<DialogConfigAddBinding>()) {
             tvOk.setOnClickListener {
                 val configName = etContent.text.toString()
                 if (TextUtils.isEmpty(configName))
                     etContent.error = "请输入配置名称"
+
+                if (nameList.contains(configName)) etContent.error = "配置名称已存在,请重新命名"
                 else {
                     listener?.ok(configName)
                     dismiss()
@@ -69,7 +74,6 @@ class ConfigAddDialog() : BaseDialog() {
             }
             tvNo.setOnClickListener { dismiss() }
         }
-
     }
 
 

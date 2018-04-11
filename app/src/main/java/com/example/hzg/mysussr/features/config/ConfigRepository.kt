@@ -2,6 +2,7 @@ package com.example.hzg.mysussr.features.config
 
 import com.example.hzg.mysussr.ResultObserver
 import io.reactivex.Observable
+import io.reactivex.SingleObserver
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
@@ -12,7 +13,7 @@ import io.reactivex.schedulers.Schedulers
  */
 class ConfigRepository {
 
-    lateinit var configDao: ConfigDao
+    var configDao: ConfigDao
 
     constructor(configDao: ConfigDao) {
         this.configDao = configDao
@@ -30,8 +31,17 @@ class ConfigRepository {
 
     fun insertConfig(configBean: ConfigBean, observer: ResultObserver<ConfigBean>): Disposable {
         return Observable.create<ConfigBean>({
-            configDao.insert(configBean)
-            it.onNext(configBean)
+            val rowNum = configDao.insert(configBean)
+            it.onNext(configDao.getConfigByRowId())
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(observer)
+    }
+
+    fun deleteConfig(uid: Int, observer: ResultObserver<Unit>): Disposable {
+        return Observable.create<Unit>({
+            it.onNext(configDao.deleteConfigById(uid))
         })
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -57,28 +67,23 @@ class ConfigRepository {
 
     }
 
-    fun loadSelectConfig(selectId: Int, observer: ResultObserver<ConfigBean>): Disposable {
-        return Observable.create<ConfigBean>({
-            //   it.onNext(configDao.getConfigById(selectId))
-        })
+    fun loadSelectConfig(selectId: Int, observer: SingleObserver<ConfigBean>) {
+//        return Observable.create<ConfigBean>({
+//            it.onNext(configDao.getConfigById(selectId))
+//        })
+        return configDao.getConfigById(selectId)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(observer)
+                .subscribe(observer)
+
 
     }
+
 
     fun loadSimpleConfigList(observer: ResultObserver<List<SimpleConfig>>): Disposable {
         return Observable.create<List<SimpleConfig>>({
             it.onNext(configDao.getConfigNameList())
         })
-//                .map {
-//                    val list = ArrayList<SimpleConfig>()
-//                    it.mapTo(list) {
-//                        Log.d("xxxxx", it.data.toString())
-//                        SimpleConfig(it.uid, it.configName)
-//                    }
-//                    return@map list
-//                }
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(observer)

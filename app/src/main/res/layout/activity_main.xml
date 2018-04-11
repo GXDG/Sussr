@@ -37,12 +37,12 @@
                         app:layout_constraintBottom_toBottomOf="parent" />
                     <Button
                         android:id="@+id/btn_insert"
-                        android:text="插入数据"
+                        android:text="检测附件"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <Button
                         android:id="@+id/btn_load"
-                        android:text="读取数据"
+                        android:text="检测sussr"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content" />
                     <Button

@@ -115,7 +115,7 @@ class ConfigAdapter(context: Context, mData: MutableList<Data>) : BaseAdapter<Co
     var listDatas: MutableList<Array<String>>
 
     init {
-        listableIndexs = mutableListOf(3, 4, 5, 8)
+        listableIndexs = mutableListOf(4, 5, 6, 9)
         listDatas = mutableListOf(
                 context.resources.getStringArray(R.array.value_method),
                 context.resources.getStringArray(R.array.value_protocol),

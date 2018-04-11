@@ -13,6 +13,7 @@ import com.example.hzg.mysussr.base.BaseActivity
 import com.example.hzg.mysussr.databinding.ActivityMainBinding
 import com.example.hzg.mysussr.features.config.*
 import com.example.hzg.mysussr.features.uid.UidActivity
+import com.example.hzg.mysussr.util.DelegateExt
 import com.example.hzg.mysussr.widget.ConfigListDialog
 import com.example.hzg.mysussr.widget.LoadingDialog
 
@@ -22,7 +23,8 @@ class MainActivity : BaseActivity() {
     private var mConfigBean: ConfigBean? = null
     private lateinit var dataList: ArrayList<ConfigAdapter.Data>
     var loadingDialog: LoadingDialog? = null
-    var selectId = 0
+    var selectId by DelegateExt.sPreference("selectId", 0)
+    lateinit var adapter: ConfigAdapter
     override fun getLayoutResId(): Int {
         return R.layout.activity_main;
     }
@@ -41,7 +43,7 @@ class MainActivity : BaseActivity() {
         mViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         dataList = ArrayList<ConfigAdapter.Data>()
 
-        val adapter = ConfigAdapter(this, dataList)
+        adapter = ConfigAdapter(this, dataList)
 
         mBinding.rvConfig.layoutManager = LinearLayoutManager(this)
         mBinding.rvConfig.adapter = adapter
@@ -49,19 +51,24 @@ class MainActivity : BaseActivity() {
         mViewModel.setRepository(ConfigRepository(db.configDao()))
         mViewModel.configList.observe(this, Observer {
             if (it != null && it.size > 0) {
-                Log.d("", "有数据")
-
+                Log.d("", "有数据,选中第一条数据")
+                refreshRv(it[0])
             } else {
                 Log.d("", "自动插入默认数据")
                 addDefaultConfig("默认配置")
             }
         })
 
-        mViewModel.getSelectConfig(selectId).observe(this, Observer {
-            mConfigBean = it
-            selectId = mConfigBean!!.uid
-            initData(mConfigBean!!)
-            adapter.notifyDataSetChanged()
+        mViewModel.message.observe(this, Observer {
+            if (it != null) {
+                if (loadingDialog!!.isAdded) {
+                    loadingDialog?.setMessage(it)
+                }
+            }
+
+        })
+        mViewModel.selectConfig.observe(this, Observer {
+            refreshRv(it!!)
         })
         mViewModel.isLoading.observe(this, Observer {
             if (it!!) {
@@ -71,35 +78,33 @@ class MainActivity : BaseActivity() {
             }
         })
 
-        mBinding.btnLoad.setOnClickListener {
-            mViewModel.repository.loadConfig(object : ResultObserver<List<ConfigBean>>() {
-                override fun onSuccess(t: List<ConfigBean>) {
-                    t.forEach {
-                        Log.d("xxx", it.configName)
-                        it.data?.forEach {
-                            Log.d(it.key, it.value)
-                        }
-                    }
-                }
-
-                override fun onFailure(e: Throwable) {
-                    Log.d("xxx", "没有数据")
-                }
-            })
-        }
+        mViewModel.loadSelectConfig(selectId)
+//        mBinding.btnLoad.setOnClickListener {
+//            mViewModel.repository.loadConfig(object : ResultObserver<List<ConfigBean>>() {
+//                override fun onSuccess(t: List<ConfigBean>) {
+//                    t.forEach {
+//                        Log.d("xxx", it.configName)
+//                        it.data?.forEach {
+//                            Log.d(it.key, it.value)
+//                        }
+//                    }
+//                }
+//
+//                override fun onFailure(e: Throwable) {
+//                    Log.d("xxx", "没有数据")
+//                }
+//            })
+//        }
         mBinding.btnInsert.setOnClickListener {
-            val data = ConfigBean()
-            data.configName = "默认配置"
-            //data.uid = 1
-            val keyArray = applicationContext.resources.getStringArray(R.array.main_titles)
-            val valueArray = applicationContext.resources.getStringArray(R.array.configValues)
-            val list = ArrayList<KeyBean>()
-            keyArray.indices.mapTo(list) { KeyBean(keyArray[it], valueArray[it]) }
-            data.data = list
-            mViewModel.insertConfig(data)
-
-
+            mViewModel.checkFile()
         }
+    }
+
+    private fun refreshRv(bean: ConfigBean) {
+        mConfigBean = bean
+        selectId = mConfigBean!!.uid
+        initData(mConfigBean!!)
+        adapter.notifyDataSetChanged()
     }
 
     private fun initData(bean: ConfigBean) {
@@ -124,7 +129,6 @@ class MainActivity : BaseActivity() {
         dataList[5 + headerSize].type = ConfigAdapter.Data.TYPE_SELECT
         dataList[8 + headerSize].type = ConfigAdapter.Data.TYPE_SELECT
 
-
         dataList[10 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
         dataList[11 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
         dataList[12 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
@@ -133,6 +137,42 @@ class MainActivity : BaseActivity() {
         dataList[15 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
         dataList[16 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
         dataList[17 + headerSize].type = ConfigAdapter.Data.TYPE_SWITCH
+    }
+
+    fun addConfigBySUSSR(sussr: MutableList<String>) {
+        val data = ConfigBean()
+        data.configName = sussr[0]
+        val keyArray = applicationContext.resources.getStringArray(R.array.main_titles)
+        sussr.removeAt(0)
+        val list = ArrayList<KeyBean>()
+        keyArray.indices.mapTo(list) { KeyBean(keyArray[it], sussr[it]) }
+        data.data = list
+        mViewModel.insertConfig(data)
+    }
+
+    fun addConfigBySSR(ssr: Array<String>) {
+        val data = ConfigBean()
+        data.configName = if (ssr[7] == "") ssr[0] else ssr[7]
+        val keyArray = applicationContext.resources.getStringArray(R.array.main_titles)
+        val valueArray = applicationContext.resources.getStringArray(R.array.configValues)
+        //                * parms[0] ip
+//                * parms[1] port
+//                * parms[2] 协议
+//                * prams[3] 加密方法
+//                * parms[4] 混淆方式
+//                * parms[5] 密码
+        valueArray.set(0, ssr[0])
+        valueArray.set(1, ssr[1])
+        valueArray.set(2, ssr[5])
+        valueArray.set(3, ssr[3])
+        valueArray.set(4, ssr[2])
+        valueArray.set(5, ssr[4])
+        if (ssr[6] != "")
+            valueArray.set(6, ssr[6])
+        val list = ArrayList<KeyBean>()
+        keyArray.indices.mapTo(list) { KeyBean(keyArray[it], valueArray[it]) }
+        data.data = list
+        mViewModel.insertConfig(data)
     }
 
     fun addDefaultConfig(configName: String) {
@@ -152,12 +192,20 @@ class MainActivity : BaseActivity() {
             mViewModel.repository.loadSimpleConfigList(object : ResultObserver<List<SimpleConfig>>() {
                 override fun onSuccess(t: List<SimpleConfig>) {
                     ConfigListDialog.newInstance(t as MutableList<SimpleConfig>, selectId, object : ConfigListDialog.AddConfigListener {
-                        override fun addConfigSussr(sussr: MutableList<String>) {
+                        override fun deleteConfig(uid: Int) {
+                            mViewModel.deleteConfig(uid)
+                        }
 
+                        override fun selectConfig(uid: Int) {
+                            mViewModel.loadSelectConfig(uid)
+                        }
+
+                        override fun addConfigSussr(sussr: MutableList<String>) {
+                            addConfigBySUSSR(sussr)
                         }
 
                         override fun addConfigSsr(ssr: Array<String>) {
-
+                            addConfigBySSR(ssr)
                         }
 
                         override fun addConfigName(name: String) {
@@ -180,7 +228,7 @@ class MainActivity : BaseActivity() {
             loadingDialog = LoadingDialog.newInstance("应用信息读取中", true)
         }
 
-        loadingDialog?.show(supportFragmentManager, "loading")
+        loadingDialog?.show(supportFragmentManager)
     }
 
 
@@ -189,8 +237,11 @@ class MainActivity : BaseActivity() {
     }
 
     fun saveConfig() {
-        mConfigBean?.configName = dataList[0].data.value
-        mViewModel.saveConfig(mConfigBean)
+        if (mConfigBean != null) {
+            mConfigBean?.configName = dataList[0].data.value
+            mViewModel.saveConfig(mConfigBean)
+        }
+
     }
 
     override fun onPause() {

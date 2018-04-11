@@ -50,11 +50,32 @@ class ConfigListDialog : BaseDialog() {
         mBinding = getDataBinding()
         with(mBinding) {
             val adapter = ConfigListAdapter(mContext, configList, selectUid)
+            adapter.listener = object : ConfigListAdapter.Listener {
+                override fun delete(item: SimpleConfig, position: Int) {
+                    ConfirmDialog.newInstance("删除配置", "确认删除配置${item.name}?(删除后不可恢复)", object : ConfirmDialog.Listener {
+                        override fun confirm(confirm: Boolean) {
+                            if (confirm) {
+                                mListener?.deleteConfig(item.uid)
+                                adapter.removeConfig(position)
+//                                adapter.mData.removeAt(position)
+//                                adapter.notifyItemRemoved(position)
+                            }
+                        }
+
+                    }).show(childFragmentManager)
+                }
+
+            }
             rvContent.layoutManager = LinearLayoutManager(mContext)
             rvContent.addItemDecoration(DividerItemDecoration(mContext, DividerItemDecoration.VERTICAL))
             rvContent.adapter = adapter
             tvNo.setOnClickListener { dismiss() }
+            tvYes.setOnClickListener {
+                mListener?.selectConfig(adapter.selectUid)
+                dismiss()
+            }
             ivAdd.setOnClickListener { openAddMenu(ivAdd) }
+
         }
     }
 
@@ -109,24 +130,31 @@ class ConfigListDialog : BaseDialog() {
     }
 
     fun showAddDialog() {
-        val dialog = ConfigAddDialog.newInstance(object : ConfigAddDialog.OnClickListener {
+        val list = ArrayList<String>()
+        configList.mapTo(list) { it.name }
+        val dialog = ConfigAddDialog.newInstance(list, object : ConfigAddDialog.OnClickListener {
             override fun sussr(sussr: MutableList<String>) {
                 mListener?.addConfigSussr(sussr)
+                dismiss()
             }
 
             override fun ssr(ssr: Array<String>) {
                 mListener?.addConfigSsr(ssr)
+                dismiss()
             }
 
             override fun ok(name: String) {
                 mListener?.addConfigName(name)
+                dismiss()
             }
         })
 
-        dialog.show(fragmentManager)
+        dialog.show(childFragmentManager)
     }
 
     interface AddConfigListener {
+        fun selectConfig(uid: Int)
+        fun deleteConfig(uid: Int)
         fun addConfigSussr(sussr: MutableList<String>)
         fun addConfigSsr(ssr: Array<String>)
         fun addConfigName(name: String)

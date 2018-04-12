@@ -6,6 +6,7 @@ import android.support.v4.util.ArraySet
 import com.example.hzg.mysussr.R
 import com.example.hzg.mysussr.base.BaseAdapter
 import com.example.hzg.mysussr.databinding.ItemUidBinding
+import com.example.hzg.mysussr.features.AdapterListener
 import com.example.hzg.mysussr.features.uid.bean.AppUidBean
 import com.example.hzg.mysussr.util.ImageLoader
 
@@ -14,22 +15,17 @@ import com.example.hzg.mysussr.util.ImageLoader
  * Created by hzg on 2017/8/30.
  *
  */
-class UidAdapter(context: Context, data: MutableList<AppUidBean>, selectList: ArrayList<String>) : BaseAdapter<AppUidBean>(context, data) {
+class UidAdapter(context: Context, data: MutableList<AppUidBean>, val selectList: ArrayList<String>) : BaseAdapter<AppUidBean>(context, data) {
+    var checkedSet: ArraySet<Int> = ArraySet()
+
+    init {
+        data.indices
+                .filter { selectList.contains(data.get(it).uid) }
+                .forEach { checkedSet.add(it) }
+    }
 
 
-//    class MyVH(view: View) : BaseAdapter.BaseVH(view) {
-//        val tvUid: TextView
-//        val ivIcon: ImageView
-//        val tvLable: TextView
-//        val checkbox: CheckBox
-//
-//        init {
-//            tvUid = view.findViewById<TextView>(R.id.tv_uid)
-//            tvLable = view.findViewById<TextView>(R.id.tv_lable)
-//            ivIcon = view.findViewById<ImageView>(R.id.iv_icon)
-//            checkbox = view.findViewById<CheckBox>(R.id.checkbox)
-//        }
-//    }
+    var listener: AdapterListener.StringCallback? = null
 
     override fun getLayoutId(viewType: Int): Int {
         return R.layout.item_uid
@@ -58,13 +54,14 @@ class UidAdapter(context: Context, data: MutableList<AppUidBean>, selectList: Ar
         }
     }
 
-    var checkedSet: ArraySet<Int> = ArraySet()
 
-    init {
-        for (i in data.indices) {
-            if (selectList.contains(data.get(i).uid))
-                checkedSet.add(i)
+     fun getSelectUidSting(): String {
+        val builder = StringBuilder();
+        checkedSet.forEach {
+            if (builder.isNotEmpty()) builder.append(",")
+            builder.append(mData.get(it).uid)
         }
+        return builder.toString()
     }
 
     fun refresh() {

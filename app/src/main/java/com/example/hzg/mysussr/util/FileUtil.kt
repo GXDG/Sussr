@@ -19,12 +19,13 @@ object FileUtil {
         val file = File(fileName)
         return file.exists()
     }
+
     fun copyFileFromAssets(context: Context, dstPath: String) {
 
         context.assets.list("")
                 .forEach {
                     Log.d("accests path:", it)
-                    if (it.contains("apk") || it.contains("zip"))
+                    if (it.contains("apk") || it.contains("zip")||it.contains(".tar"))
                         copyFileInAssets(context, it, dstPath + "/" + it)
                 }
     }
@@ -54,6 +55,14 @@ object FileUtil {
         val output = FileOutputStream(dst)
         output.write(input.readBytes())
         output.close()
+    }
+
+    fun installApk(context: Context, apkPath: String) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.setDataAndType(Uri.fromFile(File(apkPath)), "application/vnd.android.package-archive")
+
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        context.startActivity(intent)
     }
 
     fun installApk(context: Context, apkPath: String, providerAuthority: String?) {

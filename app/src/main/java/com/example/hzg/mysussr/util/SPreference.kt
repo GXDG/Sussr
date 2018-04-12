@@ -1,7 +1,7 @@
 package com.example.hzg.mysussr.util
 
 import android.content.Context
-import com.hzg.mysussr.AppConfig
+import com.example.hzg.mysussr.AppConfig
 import kotlin.properties.ReadWriteProperty
 import kotlin.reflect.KProperty
 

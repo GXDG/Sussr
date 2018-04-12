@@ -9,7 +9,9 @@ import io.reactivex.observers.DisposableObserver
  */
 abstract class SingleResultObserver<T> : SingleObserver<T> {
 
+    override fun onSubscribe(d: Disposable) {
 
+    }
 //    override fun onNext(t: T) {
 //        onSuccess(t)
 //    }

@@ -29,4 +29,13 @@
         <!-- 不在Window上，全屏的关键-->
         <item name="android:windowIsFloating">false</item>
     </style>
+
+    <style name="quick_btn">
+        <item name="android:layout_width">56dp</item>
+        <item name="android:layout_height">56dp</item>
+        <item name="android:layout_gravity">bottom|right</item>
+        <item name="android:layout_margin">80dp</item>
+        <item name="android:background">@drawable/sl_btn_quick_menu</item>
+        <item name="android:gravity">center</item>
+    </style>
 </resources>

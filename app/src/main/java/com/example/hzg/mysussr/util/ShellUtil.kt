@@ -27,6 +27,7 @@ object ShellUtil {
         val errStream = p.errorStream
 //      写入命令 isRoot为真时 从0开始，为假时从1开始（创建 Process时消耗了cmds【0】）
         for (index in startIndex..cmds.lastIndex) {
+            Log.d(tag, cmds[index]);
             outputStream.write((cmds[index] + "\n").toByteArray())
         }
         outputStream.close()

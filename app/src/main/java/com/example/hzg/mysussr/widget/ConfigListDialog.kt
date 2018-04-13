@@ -100,21 +100,24 @@ class ConfigListDialog : BaseDialog() {
             when (it) {
                 0 -> {
                     val clipboard = context!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val ssr = clipboard.text.toString()
-                    if (ssr.startsWith("ssr://")) {
+                    val ssr = clipboard.text?.toString()
+
+                    if (ssr != null && ssr.startsWith("ssr://")) {
                         val ssrResult = SSRConfigUtil.getConfigItemFromSSR(ssr)
                         if (ssrResult != null) {
                             mListener?.addConfigSsr(ssrResult)
+                            dismiss()
                         } else toastS("ssr链接解析错误")
                     } else toastS("请输入正确的ssr链接")
                 }
                 1 -> {
                     val clipboard = context!!.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val sussr = clipboard.text.toString()
-                    if (sussr.startsWith("sussr://")) {
+                    val sussr = clipboard.text?.toString()
+                    if (sussr != null && sussr.startsWith("sussr://")) {
                         val ssrResult = SSRConfigUtil.getConfigItemFromSuSSR(sussr)
                         if (ssrResult != null) {
                             mListener?.addConfigSussr(ssrResult)
+                            dismiss()
                         } else toastS("sussr链接解析错误")
                     } else toastS("请输入正确的sussr链接")
                 }

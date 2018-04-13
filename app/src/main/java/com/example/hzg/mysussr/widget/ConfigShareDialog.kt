@@ -28,7 +28,7 @@ class ConfigShareDialog : BaseDialog() {
     }
 
     override fun initDialog() {
-
+        setFullScreen(true)
     }
 
     override fun init() {

@@ -27,6 +27,7 @@ import java.util.List;
 public class AppUidFragment extends BaseFragment {
     private String type;
     UidAdapter adapter;
+    private String content;
 
     public static AppUidFragment newInstance(String type, String content) {
         AppUidFragment fragment = new AppUidFragment();
@@ -49,9 +50,10 @@ public class AppUidFragment extends BaseFragment {
         ArrayList<String> selectList = new ArrayList<>();
         if (getArguments() != null) {
             type = getArguments().getString("type");
-            String content = getArguments().getString("content");
+            content = getArguments().getString("content");
             if (content != null) {
-                selectList.addAll(Arrays.asList(content.split(",")));
+                selectList.addAll(Arrays.asList(content.split(" ")));
+                Log.d("select", selectList.toString());
             }
         }
         adapter = new UidAdapter(mContext, dataList, selectList);
@@ -67,7 +69,7 @@ public class AppUidFragment extends BaseFragment {
                 Log.d("onChanged", "数据更新");
                 dataList.clear();
                 dataList.addAll(appUidBeans);
-                adapter.notifyDataSetChanged();
+                adapter.notifyChanged();
             }
         });
 
@@ -82,6 +84,15 @@ public class AppUidFragment extends BaseFragment {
     }
 
     public String getUidString() {
-        return adapter.getSelectUidSting();
+        String s;
+        if (adapter != null) {
+            s = adapter.getSelectUidSting();
+            content = s;
+        } else {
+            s = content==null?"":content;
+        }
+
+        Log.d("uid", s);
+        return s;
     }
 }

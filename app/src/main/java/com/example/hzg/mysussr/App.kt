@@ -2,6 +2,7 @@ package com.example.hzg.mysussr
 
 import android.app.Application
 import com.squareup.leakcanary.LeakCanary
+import com.tencent.bugly.crashreport.CrashReport
 import kotlin.properties.Delegates
 
 /**
@@ -18,5 +19,6 @@ class App : Application() {
         super.onCreate()
         instance = this
         LeakCanary.install(this)
+        CrashReport.initCrashReport(getApplicationContext(), "39ce583819", false);
     }
 }

@@ -13,4 +13,8 @@ interface AdapterListener {
     interface StringCallback {
         fun onChange(s: String)
     }
+
+    interface DialogCallback {
+        fun onClickYes(s: String)
+    }
 }

@@ -2,11 +2,14 @@ package com.example.hzg.mysussr.features.config;
 
 import android.arch.lifecycle.MutableLiveData;
 import android.arch.lifecycle.ViewModel;
+import android.arch.persistence.room.Room;
 import android.util.Log;
 
 import com.example.hzg.mysussr.AppConfig;
 import com.example.hzg.mysussr.ResultObserver;
 import com.example.hzg.mysussr.SingleResultObserver;
+import com.example.hzg.mysussr.net.HttpService;
+import com.example.hzg.mysussr.net.ServiceFactory;
 import com.example.hzg.mysussr.util.FileUtil;
 import com.example.hzg.mysussr.util.ShellUtil;
 import com.example.hzg.mysussr.util.Utils;
@@ -24,8 +27,10 @@ import io.reactivex.SingleOnSubscribe;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
 import kotlin.Unit;
+import okhttp3.ResponseBody;
 
 /**
  * Created by hzg on 2018/4/3 16:51
@@ -34,23 +39,35 @@ import kotlin.Unit;
  */
 
 public class MainViewModel extends ViewModel {
-    private MutableLiveData<List<ConfigBean>> mConfigList;
-    private MutableLiveData<ConfigBean> mSelectConfig;
+
     private ConfigRepository repository;
     private SussrConfigRepository sussrRepository;
+    private HttpService httpService;
+    private MutableLiveData<List<ConfigBean>> mConfigList;
+    private MutableLiveData<ConfigBean> mSelectConfig;
     private MutableLiveData<Boolean> isLoading;
     private CompositeDisposable mDisposables;
 
-    public MutableLiveData<String> message;
+    public MutableLiveData<String> errorMessage;
+    public MutableLiveData<String> editMessage;
+    public MutableLiveData<String> shellResultMessage;
     public MutableLiveData<Boolean> reInstallApk;
 
     public MainViewModel() {
+        AppDataBase db = Room.databaseBuilder(Utils.INSTANCE.getApp(),
+                AppDataBase.class, "sussr.db")
+                .fallbackToDestructiveMigration()
+                .build();
         sussrRepository = new SussrConfigRepository();
+        httpService = ServiceFactory.Companion.getInstance().createService();
+        repository = new ConfigRepository(db.configDao());
         isLoading = new MutableLiveData<>();
         mDisposables = new CompositeDisposable();
         mSelectConfig = new MutableLiveData<>();
         mConfigList = new MutableLiveData<>();
-        message = new MutableLiveData<>();
+        errorMessage = new MutableLiveData<>();
+        editMessage = new MutableLiveData<>();
+        shellResultMessage = new MutableLiveData<>();
         reInstallApk = new MutableLiveData<>();
     }
 
@@ -165,7 +182,7 @@ public class MainViewModel extends ViewModel {
     public void checkFile() {
         if (FileUtil.INSTANCE.isFileExist(AppConfig.INSTANCE.getSUSSR_SRC_PATH()) && FileUtil.INSTANCE.isFileExist(AppConfig.INSTANCE.getBUSYBOX_SRC_PATH())) {
             isLoading.setValue(false);
-            message.setValue("附件已经复制成功");
+            errorMessage.setValue("附件已经复制成功");
         } else {
 
             copyFile();
@@ -174,8 +191,7 @@ public class MainViewModel extends ViewModel {
     }
 
     public void copyFile() {
-        isLoading.setValue(true);
-        message.setValue("附件正在复制");
+
         Observable.create(new ObservableOnSubscribe<Boolean>() {
             @Override
             public void subscribe(ObservableEmitter<Boolean> emitter) throws Exception {
@@ -187,16 +203,22 @@ public class MainViewModel extends ViewModel {
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribeWith(new ResultObserver<Boolean>() {
                     @Override
+                    protected void onStart() {
+                        super.onStart();
+                        isLoading.setValue(true);
+                    }
+
+                    @Override
                     public void onSuccess(Boolean aBoolean) {
                         isLoading.setValue(false);
-                        message.setValue("附件复制完成");
+                        errorMessage.setValue("附件复制完成");
                     }
 
                     @Override
                     public void onFailure(@NotNull Throwable e) {
                         e.printStackTrace();
                         isLoading.setValue(false);
-                        message.setValue("附件复制失败");
+                        errorMessage.setValue("附件复制失败");
                     }
                 });
     }
@@ -212,7 +234,7 @@ public class MainViewModel extends ViewModel {
 
                     @Override
                     public void onSuccess(String[] strings) {
-                        message.setValue(strings[0] + "/n" + strings[1]);
+                        errorMessage.setValue(strings[0] + "/n" + strings[1]);
                         reInstallApk.setValue(true);
                     }
 
@@ -237,9 +259,9 @@ public class MainViewModel extends ViewModel {
                     @Override
                     public void onSuccess(String[] strings) {
                         if (strings[1].contains("Permission denied")) {
-                            message.setValue("请授予软件root权限");
+                            errorMessage.setValue("请授予软件root权限");
                         } else {
-                            message.setValue(strings[0] + "/n" + strings[1]);
+                            errorMessage.setValue(strings[0] + "/n" + strings[1]);
                         }
 
 
@@ -248,7 +270,7 @@ public class MainViewModel extends ViewModel {
                     @Override
                     public void onError(Throwable e) {
                         e.printStackTrace();
-                        message.setValue("请授予软件root权限");
+                        errorMessage.setValue("请授予软件root权限");
                     }
                 });
     }
@@ -262,41 +284,82 @@ public class MainViewModel extends ViewModel {
             config.add(s.getValue());
         }
 
-        sussrRepository.startSussr( config.toArray(new String[0]), shellObserver);
+        sussrRepository.startSussr(config.toArray(new String[0]), shellObserver);
     }
 
     private SingleResultObserver<String[]> shellObserver = new SingleResultObserver<String[]>() {
+        @Override
+        public void onSubscribe(@NotNull Disposable d) {
+            super.onSubscribe(d);
+            isLoading.setValue(true);
+        }
+
         @Override
         public void onSuccess(String[] strings) {
             Log.d("result",
                     "输出信息:" + strings[0]
                             + "\n错误信息" + strings[1]);
+            if (strings[1].contains("Permission denied"))
+                errorMessage.setValue("请授予软件root权限");
+            else if (strings[1].contains("No such file or directory")||strings[1].contains("not found"))
+                errorMessage.setValue("请先安装Sussr");
+            else {
+                shellResultMessage.setValue("输出信息:\n" + strings[0]
+                        + "\n错误信息\n" + strings[1]);
+            }
+
+            isLoading.setValue(false);
         }
 
         @Override
         public void onError(Throwable e) {
             e.printStackTrace();
+            errorMessage.setValue("请授予软件root权限");
+            isLoading.setValue(false);
         }
     };
 
     public void stopSussr() {
+
         sussrRepository.stopSussr(shellObserver);
+    }
+
+    public void removeSussr() {
+        sussrRepository.removeSussr(shellObserver);
     }
 
     public void checkSussr() {
         sussrRepository.checkSussr(shellObserver);
     }
 
-    public void editSussr() {
-        sussrRepository.editSussr(new SingleResultObserver<String[]>() {
+    public void saveSussrSetting(String s) {
+        sussrRepository.saveEditSussr(s, new SingleResultObserver<String[]>() {
             @Override
             public void onSuccess(String[] strings) {
-                Log.d("shell", strings[0] + "\n" + strings[1]);
+                errorMessage.setValue("保存成功");
             }
 
             @Override
             public void onError(Throwable e) {
                 e.printStackTrace();
+            }
+        });
+    }
+
+    public void editSussr() {
+        sussrRepository.editSussr(new SingleResultObserver<String[]>() {
+            @Override
+            public void onSuccess(String[] strings) {
+                Log.d("result",
+                        "输出信息:" + strings[0]
+                                + "\n错误信息" + strings[1]);
+                editMessage.setValue(strings[0]);
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                e.printStackTrace();
+                errorMessage.setValue("请授予软件root权限");
             }
         });
     }
@@ -304,21 +367,66 @@ public class MainViewModel extends ViewModel {
     public void installSussr() {
         sussrRepository.installSussr(new SingleResultObserver<String[]>() {
             @Override
-            public void onSuccess(String[] strings) {
+            public void onSubscribe(@NotNull Disposable d) {
+                super.onSubscribe(d);
+                isLoading.setValue(true);
+            }
 
+            @Override
+            public void onSuccess(String[] strings) {
+                isLoading.setValue(false);
                 if (strings[1].contains("Permission denied"))
-                    message.setValue("请授予软件root权限");
+                    errorMessage.setValue("请授予软件root权限");
                 else if (strings[1].contains("sh: <stdin>[3]: unzip: not found"))
-                    message.setValue("请安装支持unzip命令的busybox");
+                    errorMessage.setValue("请安装支持unzip命令的busybox");
+                else if (strings[1].contains("bunzip2: Can't open input file"))
+                    errorMessage.setValue("请先点击重置附件,完成附件的初始化");
+
+                else {
+                    errorMessage.setValue("安装Sussr成功");
+                }
                 Log.d("installSussr", strings[0] + "\n" + strings[1]);
             }
 
             @Override
             public void onError(Throwable e) {
                 e.printStackTrace();
+                errorMessage.setValue("请授予软件root权限");
+                isLoading.setValue(false);
             }
         });
     }
 
+
+    public void checkIp() {
+        httpService.checkIp()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .map(new Function<ResponseBody, String>() {
+                    @Override
+                    public String apply(ResponseBody responseBody) throws Exception {
+                        return responseBody.string();
+                    }
+                })
+                .subscribe(new ResultObserver<String>() {
+                    @Override
+                    protected void onStart() {
+                        super.onStart();
+                        isLoading.setValue(true);
+                    }
+
+                    @Override
+                    public void onSuccess(String s) {
+                        shellResultMessage.setValue(s);
+                        isLoading.setValue(false);
+                    }
+
+                    @Override
+                    public void onFailure(@NotNull Throwable e) {
+                        e.printStackTrace();
+                        isLoading.setValue(false);
+                    }
+                });
+    }
 
 }

@@ -55,13 +55,21 @@ class UidAdapter(context: Context, data: MutableList<AppUidBean>, val selectList
     }
 
 
-     fun getSelectUidSting(): String {
+    fun getSelectUidSting(): String {
         val builder = StringBuilder();
         checkedSet.forEach {
-            if (builder.isNotEmpty()) builder.append(",")
+            if (builder.isNotEmpty()) builder.append(" ")
             builder.append(mData.get(it).uid)
         }
         return builder.toString()
+    }
+
+    fun notifyChanged() {
+        mData.indices
+                .filter { selectList.contains(mData.get(it).uid) }
+                .forEach { checkedSet.add(it) }
+        refresh()
+        notifyDataSetChanged()
     }
 
     fun refresh() {

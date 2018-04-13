@@ -28,26 +28,31 @@ object SSRConfigUtil {
              * parms[4] 混淆方式
              * parms[5] 密码
              */
-            val parms = decodeString.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[0].split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
-            val parms1 = decodeString.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()[1].split("&".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+            val parmArray = decodeString.split("/".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray();
+            val parms = parmArray[0].split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+
             val other = Array<String>(2, { "" })
+            if (parmArray.size > 1) {
+                val parms1 = parmArray[1].split("&".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+                parms1.forEach {
+                    Log.e("解析第2部分", it)
+                    if (it.contains("obfsparam")) {
+                        other[0] = it.substring(it.indexOf("=") + 1, it.length)
+                        other[0] = String(Base64.decode(other[0], Base64.DEFAULT))
+                    }
+
+                    if (it.contains("remarks")) {
+                        other[1] = it.substring(it.indexOf("=") + 1, it.length)
+                        other[1] = String(Base64.decode(other[1], Base64.DEFAULT))
+                    }
+                }
+            }
+
             parms.forEach {
                 Log.e("解析第1部分", it)
             }
 
-            parms1.forEach {
-                Log.e("解析第2部分", it)
-                if (it.contains("obfsparam")) {
-                    other[0] = it.substring(it.indexOf("=") + 1, it.length)
-                    other[0] = String(Base64.decode(other[0], Base64.DEFAULT))
-                }
 
-                if (it.contains("remarks")) {
-                    other[1] = it.substring(it.indexOf("=") + 1, it.length)
-                    other[1] = String(Base64.decode(other[1], Base64.DEFAULT))
-                }
-
-            }
 
 
 
@@ -55,17 +60,14 @@ object SSRConfigUtil {
             val result = parms.toMutableList()
             for (s in other) {
                 result.add(s)
-
-
             }
             result.forEach {
                 Log.e("最终解析的数据", it)
             }
 
-
-
             return result.toTypedArray()
         } catch (e: Exception) {
+            e.printStackTrace()
             return null
         }
 

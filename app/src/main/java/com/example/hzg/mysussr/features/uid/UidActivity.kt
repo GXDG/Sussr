@@ -3,6 +3,7 @@ package com.example.hzg.mysussr.features.uid
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.design.widget.TabLayout
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentPagerAdapter
@@ -12,6 +13,7 @@ import com.example.hzg.mysussr.AppConfig
 import com.example.hzg.mysussr.R
 import com.example.hzg.mysussr.util.DelegateExt
 import com.example.hzg.mysussr.widget.LoadingDialog
+import kotlinx.android.synthetic.main.activity_uid.*
 import java.util.*
 
 class UidActivity : AppCompatActivity() {
@@ -37,7 +39,7 @@ class UidActivity : AppCompatActivity() {
         val viewPager = findViewById<ViewPager>(R.id.view_pager)
         val tabLayout = findViewById<TabLayout>(R.id.tab_layout)
         fragmentList = ArrayList();
-        val titleList = Arrays.asList("UDP放行", "TCP放行", "UDP禁网", "UDP例外")
+        val titleList = Arrays.asList("TCP放行", "UDP放行", "UDP禁网", "UDP例外")
         fragmentList.add(AppUidFragment.newInstance("TFX", TFX))
         fragmentList.add(AppUidFragment.newInstance("UFX", UFX))
         fragmentList.add(AppUidFragment.newInstance("UJW", UJW))
@@ -57,6 +59,19 @@ class UidActivity : AppCompatActivity() {
             }
         }
         tabLayout.setupWithViewPager(viewPager)
+        tv_save.setOnClickListener {
+
+            TFX = fragmentList[0].uidString
+            UFX = fragmentList[1].uidString
+            UJW = fragmentList[2].uidString
+            ULW = fragmentList[3].uidString
+
+
+            Snackbar.make(tv_save, "保存成功", Snackbar.LENGTH_SHORT).show()
+        }
+        iv_back.setOnClickListener {
+            finish()
+        }
     }
 
     fun showDialog() {
@@ -72,10 +87,6 @@ class UidActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
-        TFX = fragmentList[0].uidString
-        UFX = fragmentList[1].uidString
-        UJW = fragmentList[2].uidString
-        ULW = fragmentList[3].uidString
         super.onStop()
     }
 }

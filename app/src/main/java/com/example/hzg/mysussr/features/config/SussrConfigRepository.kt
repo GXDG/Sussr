@@ -5,6 +5,7 @@ import com.example.hzg.mysussr.AppConfig
 import com.example.hzg.mysussr.R
 import com.example.hzg.mysussr.SingleResultObserver
 import com.example.hzg.mysussr.util.DelegateExt
+import com.example.hzg.mysussr.util.FileUtil
 import com.example.hzg.mysussr.util.ShellUtil
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -76,6 +77,18 @@ class SussrConfigRepository {
 
     fun editSussr(observer: SingleResultObserver<Array<String>>) {
         executeShell(AppConfig.EditSussr, observer)
+    }
+
+    fun saveEditSussr(s: String, observer: SingleResultObserver<Array<String>>) {
+        Single.create<Array<String>>({
+            FileUtil.writeFileForText(s, AppConfig.FILE_PATH + "/temp")
+            it.onSuccess(ShellUtil.execShell(arrayOf("cat  ${AppConfig.FILE_PATH}/temp > /data/sussr/setting.ini"), true, true))
+        })
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(observer)
+
+
     }
 
     fun removeSussr(observer: SingleResultObserver<Array<String>>) {

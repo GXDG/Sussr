@@ -5,12 +5,13 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ValueAnimator
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.arch.persistence.room.Room
 import android.content.Intent
+import android.graphics.Rect
 import android.support.design.widget.Snackbar
 import android.support.v7.widget.DividerItemDecoration
 import android.support.v7.widget.GridLayoutManager
 import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.View
 import android.view.animation.AccelerateInterpolator
@@ -24,6 +25,7 @@ import com.example.hzg.mysussr.features.config.*
 import com.example.hzg.mysussr.features.uid.UidActivity
 import com.example.hzg.mysussr.util.DelegateExt
 import com.example.hzg.mysussr.util.FileUtil
+import com.example.hzg.mysussr.widget.ConfigEditDialog
 import com.example.hzg.mysussr.widget.ConfigListDialog
 import com.example.hzg.mysussr.widget.LoadingDialog
 
@@ -47,12 +49,12 @@ class MainActivity : BaseActivity() {
     }
 
     private fun initQuickMenu() {
-        quickMenuList = arrayOf(mBinding.btnCheck, mBinding.btnStart, mBinding.btnStop, mBinding.btnIp)
+        quickMenuList = arrayOf(mBinding.btnStart, mBinding.btnCheck, mBinding.btnStop, mBinding.btnIp)
         mBinding.btnCheck.setOnClickListener { mViewModel.checkSussr() }
         mBinding.btnStart.setOnClickListener { mViewModel.startSussr(mConfigBean) }
         mBinding.btnStop.setOnClickListener { mViewModel.stopSussr() }
         mBinding.btnIp.setOnClickListener {
-            //todo:查询ip
+            mViewModel.checkIp()
         }
 
         val dimen = resources.getDimension(R.dimen.dp70)
@@ -115,10 +117,11 @@ class MainActivity : BaseActivity() {
     }
 
     override fun initData() {
-        val db = Room.databaseBuilder(getApplicationContext(),
-                AppDataBase::class.java, "sussr1")
-                .fallbackToDestructiveMigration()
-                .build()
+//        val db = Room.databaseBuilder(getApplicationContext(),
+//                AppDataBase::class.java, "sussr1")
+//                .fallbackToDestructiveMigration()
+//                .build()
+//        mViewModel.setRepository(ConfigRepository(db.configDao()))
 
         mViewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         dataList = ArrayList<ConfigAdapter.Data>()
@@ -128,7 +131,7 @@ class MainActivity : BaseActivity() {
         mBinding.rvConfig.layoutManager = LinearLayoutManager(this)
         mBinding.rvConfig.adapter = adapter
         mBinding.rvConfig.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
-        mViewModel.setRepository(ConfigRepository(db.configDao()))
+
         mViewModel.configList.observe(this, Observer {
             if (it != null && it.size > 0) {
                 Log.d("", "有数据,选中第一条数据")
@@ -139,7 +142,7 @@ class MainActivity : BaseActivity() {
             }
         })
 
-        mViewModel.message.observe(this, Observer {
+        mViewModel.errorMessage.observe(this, Observer {
             if (it != null) {
                 Snackbar.make(mBinding.btnMenu, it, Snackbar.LENGTH_SHORT).show()
             }
@@ -164,19 +167,45 @@ class MainActivity : BaseActivity() {
                 }
             }
         })
+        mViewModel.editMessage.observe(this, Observer {
+            ConfigEditDialog.newInstance("sussr配置文件编辑", it!!, object : AdapterListener.DialogCallback {
+                override fun onClickYes(s: String) {
+                    mViewModel.saveSussrSetting(s)
+                }
+            }).show(supportFragmentManager)
+        })
+        mViewModel.shellResultMessage.observe(this, Observer {
+            ConfigEditDialog.newInstanceForText("执行结果", it!!).show(supportFragmentManager)
+        })
         mViewModel.loadSelectConfig(selectId)
 
 
+        initMenu()
+
+    }
+
+    private fun initMenu() {
+        mBinding.ivBack.setOnClickListener {
+            finish()
+        }
+        mBinding.tvUid.setOnClickListener {
+            startActivity(Intent(this@MainActivity, UidActivity::class.java))
+        }
+        mBinding.tvSelect.setOnClickListener {
+            saveConfig()
+            showConfigList()
+        }
         val menuList = ArrayList<MenuAdapter.Data>()
-        menuList.add(MenuAdapter.Data("UID放行"))
-        menuList.add(MenuAdapter.Data("配置选择"))
-        menuList.add(MenuAdapter.Data("附件检测"))
-        menuList.add(MenuAdapter.Data("安装Busybox(APK)"))
+//        menuList.add(MenuAdapter.Data("UID放行"))
+//        menuList.add(MenuAdapter.Data("配置选择"))
+        //    menuList.add(MenuAdapter.Data("附件检测"))
+        //  menuList.add(MenuAdapter.Data("安装Busybox(APK)"))
         menuList.add(MenuAdapter.Data("附件重置"))
         //   menuList.add(MenuAdapter.Data("附件权限更改"))
         //   menuList.add(MenuAdapter.Data("root权限检测"))
         menuList.add(MenuAdapter.Data("安装sussr"))
         menuList.add(MenuAdapter.Data("编辑sussr配置"))
+        menuList.add(MenuAdapter.Data("删除sussr"))
         val menuAdapter = MenuAdapter(this, menuList)
         menuAdapter.listener = object : AdapterListener.ItemOnClickLister<MenuAdapter.Data> {
             override fun onClick(position: Int, item: MenuAdapter.Data) {
@@ -185,36 +214,7 @@ class MainActivity : BaseActivity() {
                         startActivity(Intent(this@MainActivity, UidActivity::class.java))
                     }
                     "配置选择" -> {
-                        mViewModel.repository.loadSimpleConfigList(object : ResultObserver<List<SimpleConfig>>() {
-                            override fun onSuccess(t: List<SimpleConfig>) {
-                                ConfigListDialog.newInstance(t as MutableList<SimpleConfig>, selectId, object : ConfigListDialog.AddConfigListener {
-                                    override fun deleteConfig(uid: Int) {
-                                        mViewModel.deleteConfig(uid)
-                                    }
-
-                                    override fun selectConfig(uid: Int) {
-                                        mViewModel.loadSelectConfig(uid)
-                                    }
-
-                                    override fun addConfigSussr(sussr: MutableList<String>) {
-                                        addConfigBySUSSR(sussr)
-                                    }
-
-                                    override fun addConfigSsr(ssr: Array<String>) {
-                                        addConfigBySSR(ssr)
-                                    }
-
-                                    override fun addConfigName(name: String) {
-                                        addDefaultConfig(name)
-                                    }
-                                }).show(supportFragmentManager)
-                            }
-
-                            override fun onFailure(e: Throwable) {
-
-                            }
-
-                        })
+                        showConfigList()
                     }
                     "附件检测" -> {
                         mViewModel.checkFile()
@@ -242,12 +242,54 @@ class MainActivity : BaseActivity() {
                     "编辑sussr配置" -> {
                         mViewModel.editSussr()
                     }
+                    "删除sussr" -> {
+                        mViewModel.removeSussr()
+                    }
                 }
             }
 
         }
         mBinding.rvMenu.layoutManager = GridLayoutManager(this, 2)
         mBinding.rvMenu.adapter = menuAdapter
+        val dimen = resources.getDimension(R.dimen.dp8).toInt()
+        mBinding.rvMenu.addItemDecoration(object : RecyclerView.ItemDecoration() {
+            override fun getItemOffsets(outRect: Rect?, view: View?, parent: RecyclerView?, state: RecyclerView.State?) {
+                outRect?.set(dimen, dimen, dimen, dimen)
+            }
+        })
+    }
+
+    private fun showConfigList() {
+        mViewModel.repository.loadSimpleConfigList(object : ResultObserver<List<SimpleConfig>>() {
+            override fun onSuccess(t: List<SimpleConfig>) {
+                ConfigListDialog.newInstance(t as MutableList<SimpleConfig>, selectId, object : ConfigListDialog.AddConfigListener {
+                    override fun deleteConfig(uid: Int) {
+                        mViewModel.deleteConfig(uid)
+                    }
+
+                    override fun selectConfig(uid: Int) {
+                        mViewModel.loadSelectConfig(uid)
+                    }
+
+                    override fun addConfigSussr(sussr: MutableList<String>) {
+                        addConfigBySUSSR(sussr)
+                    }
+
+                    override fun addConfigSsr(ssr: Array<String>) {
+                        addConfigBySSR(ssr)
+                    }
+
+                    override fun addConfigName(name: String) {
+                        addDefaultConfig(name)
+                    }
+                }).show(supportFragmentManager)
+            }
+
+            override fun onFailure(e: Throwable) {
+
+            }
+
+        })
     }
 
 
@@ -278,6 +320,8 @@ class MainActivity : BaseActivity() {
                 }
             }
         }
+      dataList[2+headerSize].contentHide=true
+      dataList[9+headerSize].contentHide=true
 
         dataList[3 + headerSize].type = ConfigAdapter.Data.TYPE_SELECT
         dataList[4 + headerSize].type = ConfigAdapter.Data.TYPE_SELECT
@@ -388,7 +432,7 @@ class MainActivity : BaseActivity() {
 
     fun showDialog() {
         if (loadingDialog == null) {
-            loadingDialog = LoadingDialog.newInstance("应用信息读取中", true)
+            loadingDialog = LoadingDialog.newInstance("执行中,请耐心等候", true)
         }
 
         loadingDialog?.show(supportFragmentManager)

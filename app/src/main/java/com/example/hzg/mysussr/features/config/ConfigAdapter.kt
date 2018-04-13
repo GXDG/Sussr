@@ -4,6 +4,7 @@ import android.content.Context
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.ListPopupWindow
+import android.text.InputType
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
@@ -70,7 +71,12 @@ class ConfigAdapter(context: Context, mData: MutableList<Data>) : BaseAdapter<Co
     private fun covertEdit(holder: BaseAdapter.BaseVH, position: Int, bean: Data) {
         with(holder.getDataBinding<ItemConfigBinding>()) {
             tvHeader.text = bean.data.key
-            tvContent.text = bean.data.value
+            tvContent.setText(bean.data.value)
+            if (!bean.contentHide) {
+                tvContent.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD
+            } else {
+                tvContent.inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD
+            }
             tvContent.setOnClickListener({
                 showEditDialog(position, bean.data.value)
             })
@@ -80,7 +86,7 @@ class ConfigAdapter(context: Context, mData: MutableList<Data>) : BaseAdapter<Co
     private fun covertSelect(holder: BaseAdapter.BaseVH, position: Int, bean: Data) {
         with(holder.getDataBinding<ItemConfigBinding>()) {
             tvHeader.text = bean.data.key
-            tvContent.text = bean.data.value
+            tvContent.setText(bean.data.value)
             tvContent.setOnClickListener({
                 showListPopUpWindow(tvContent, position, listableIndexs.indexOf(position))
             })
@@ -155,7 +161,7 @@ class ConfigAdapter(context: Context, mData: MutableList<Data>) : BaseAdapter<Co
         notifyItemChanged(position)
     }
 
-    class Data(var data: KeyBean, var type: Int = TYPE_EDIT) {
+    class Data(var data: KeyBean, var type: Int = TYPE_EDIT, var contentHide: Boolean = false) {
         companion object {
             val TYPE_SWITCH = 0x1
             val TYPE_EDIT = 0x2

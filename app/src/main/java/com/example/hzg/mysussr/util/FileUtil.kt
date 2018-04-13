@@ -25,7 +25,7 @@ object FileUtil {
         context.assets.list("")
                 .forEach {
                     Log.d("accests path:", it)
-                    if (it.contains("apk") || it.contains("zip")||it.contains(".tar"))
+                    if (it.contains("apk") || it.contains("zip") || it.contains(".tar"))
                         copyFileInAssets(context, it, dstPath + "/" + it)
                 }
     }
@@ -54,6 +54,14 @@ object FileUtil {
         val input = context.assets.open(src)
         val output = FileOutputStream(dst)
         output.write(input.readBytes())
+        output.close()
+    }
+
+
+     fun writeFileForText( content: String, dst: String) {
+
+        val output = FileOutputStream(dst)
+        output.write(content.toByteArray())
         output.close()
     }
 
